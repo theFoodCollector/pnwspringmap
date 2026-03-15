@@ -39,7 +39,7 @@ function processHtml() {
   
   // Replace Mapbox token
   if (envVars.MAPBOX_TOKEN) {
-    // Replace the hardcoded token with environment variable
+    // Replace the development token with production token from .env
     htmlContent = htmlContent.replace(
       /mapboxgl\.accessToken\s*=\s*['"][^'"]+['"];/,
       `mapboxgl.accessToken = '${envVars.MAPBOX_TOKEN}';`

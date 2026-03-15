@@ -100,25 +100,34 @@
   // Token will be injected from .env during build
   mapboxgl.accessToken = 'TOKEN_PLACEHOLDER';
 
-  const map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/outdoors-v12',
-    center: [-120.5, 45.5],
-    zoom: 6,
-    attributionControl: false
-  });
+  try {
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/outdoors-v12',
+      center: [-120.5, 45.5],
+      zoom: 6,
+      attributionControl: false
+    });
 
-  map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-  map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-left');
+    map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+    map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-left');
+    
+    console.log('Map initialized successfully');
+  } catch (error) {
+    console.error('Error initializing map:', error);
+  }
 
   // Load trips from external JSON file
   let trips = [];
+  let mapLoaded = false;
   
   fetch('trips.json')
     .then(response => response.json())
     .then(data => {
       trips = data;
-      addMarkersToMap();
+      if (mapLoaded) {
+        addMarkersToMap();
+      }
     })
     .catch(error => console.error('Error loading trips:', error));
 
@@ -148,7 +157,10 @@
 
   // Initialize map and load markers when map is ready
   map.on('load', () => {
-    // addMarkersToMap() will be called when trips.json loads
+    mapLoaded = true;
+    if (trips.length > 0) {
+      addMarkersToMap();
+    }
   });
 
   function filterPins(region) {
