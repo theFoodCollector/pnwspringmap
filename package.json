@@ -1,0 +1,11 @@
+{
+  "name": "pnwspringmap",
+  "version": "1.0.0",
+  "description": "PNW Spring Trip Map",
+  "scripts": {
+    "build": "node build.js",
+    "serve": "python3 -m http.server 8000 --directory dist",
+    "dev": "python3 -m http.server 8000"
+  },
+  "devDependencies": {}
+}
