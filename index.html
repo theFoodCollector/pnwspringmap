@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Trips</title>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: transparent;
+    }
+
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
+
+    .filters {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      background: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transition: all 0.15s;
+      color: #444;
+    }
+
+    .chip.active {
+      background: #E84855;
+      color: white;
+    }
+
+    .mapboxgl-popup-content {
+      border-radius: 10px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      min-width: 180px;
+    }
+
+    .popup-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 4px;
+    }
+
+    .popup-meta {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    .popup-link {
+      font-size: 12px;
+      color: #E84855;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .popup-link:hover { text-decoration: underline; }
+
+    .pin {
+      width: 14px;
+      height: 14px;
+      background: #E84855;
+      border: 2.5px solid white;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .pin:hover { transform: scale(1.4); }
+  </style>
+</head>
+<body>
+
+
+<div id="map"></div>
+
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1IjoiZ3VybmVoYS1uYWdnaSIsImEiOiJjbW1yNnJ3cngxMTVzMnBwcXljMmwwYmE5In0.jOVRsTcAsZ80UJ737etvLg';
+
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/outdoors-v12',
+    center: [-120.5, 45.5],
+    zoom: 6,
+    attributionControl: false
+  });
+
+  map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+  map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-left');
+
+  // Load trips from external JSON file
+  let trips = [];
+  
+  fetch('trips.json')
+    .then(response => response.json())
+    .then(data => {
+      trips = data;
+      addMarkersToMap();
+    })
+    .catch(error => console.error('Error loading trips:', error));
+
+  const markers = [];
+
+  function addMarkersToMap() {
+    trips.forEach(trip => {
+      const el = document.createElement('div');
+      el.className = 'pin';
+
+      const popup = new mapboxgl.Popup({ offset: 18, closeButton: false })
+        .setHTML(`
+          <div class="popup-title">${trip.name}</div>
+          <a class="popup-link" href="${trip.postUrl}" target="_parent">
+            take me to see the photos
+          </a>
+        `);
+
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat(trip.coords)
+        .setPopup(popup)
+        .addTo(map);
+
+      markers.push({ marker, el });
+    });
+  }
+
+  // Initialize map and load markers when map is ready
+  map.on('load', () => {
+    // addMarkersToMap() will be called when trips.json loads
+  });
+
+  function filterPins(region) {
+    // Update chip styles
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    event.target.classList.add('active');
+
+    // Show/hide markers
+    markers.forEach(({ el, region: r }) => {
+      el.style.display = (region === 'all' || region === r) ? 'block' : 'none';
+    });
+  }
+</script>
+
+</body>
+</html>
