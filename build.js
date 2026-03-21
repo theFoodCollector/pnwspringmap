@@ -70,24 +70,43 @@ async function processHtml() {
 
 async function geocodeTrips(token, distDir) {
   const tripsPath = path.join(__dirname, 'trips.json');
+  const cachePath = path.join(__dirname, 'geocache.json');
+
   const trips = JSON.parse(fs.readFileSync(tripsPath, 'utf8'));
+  const cache = fs.existsSync(cachePath) ? JSON.parse(fs.readFileSync(cachePath, 'utf8')) : {};
+
+  let cacheUpdated = false;
 
   const resolved = await Promise.all(trips.map(async (trip) => {
     if (!trip.address) {
       console.error(`❌ Trip "${trip.name}" is missing an address field`);
       process.exit(1);
     }
+
+    if (cache[trip.address]) {
+      console.log(`✅ Using cached coords for "${trip.name}"`);
+      return { ...trip, coords: cache[trip.address] };
+    }
+
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(trip.address)}.json?limit=1&access_token=${token}`;
     const res = await fetch(url);
     const data = await res.json();
     if (!data.features || data.features.length === 0) {
       console.error(`❌ Could not geocode address for "${trip.name}": ${trip.address}`);
+      console.error(`   Run "npm run dev" locally to populate geocache.json, then commit it.`);
       process.exit(1);
     }
     const coords = data.features[0].center;
     console.log(`✅ Geocoded "${trip.name}" → [${coords}]`);
+    cache[trip.address] = coords;
+    cacheUpdated = true;
     return { ...trip, coords };
   }));
+
+  if (cacheUpdated) {
+    fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2));
+    console.log(`✅ geocache.json updated — commit this file to avoid re-geocoding in CI`);
+  }
 
   const outPath = path.join(distDir, 'trips.json');
   fs.writeFileSync(outPath, JSON.stringify(resolved, null, 2));
