@@ -50,22 +50,32 @@
 
     .mapboxgl-popup-content {
       border-radius: 10px;
-      padding: 14px 16px;
+      padding: 0;
       box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-      min-width: 180px;
+      width: 200px;
+      overflow: hidden;
+    }
+
+    .popup-slides {
+      display: flex;
+      transition: transform 0.3s ease;
+    }
+
+    .popup-slides.slid {
+      transform: translateX(-200px);
+    }
+
+    .popup-slide {
+      width: 200px;
+      flex-shrink: 0;
+      padding: 14px 16px;
     }
 
     .popup-title {
       font-size: 14px;
       font-weight: 600;
       color: #111;
-      margin-bottom: 4px;
-    }
-
-    .popup-meta {
-      font-size: 12px;
-      color: #888;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .popup-link {
@@ -73,22 +83,51 @@
       color: #E84855;
       text-decoration: none;
       font-weight: 500;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
     }
 
     .popup-link:hover { text-decoration: underline; }
 
-    .pin {
-      width: 14px;
-      height: 14px;
-      background: #E84855;
-      border: 2.5px solid white;
-      border-radius: 50%;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    .popup-back {
+      background: none;
+      border: none;
+      font-size: 11px;
+      color: #888;
       cursor: pointer;
-      transition: transform 0.15s;
+      padding: 0;
+      margin-bottom: 8px;
+      display: block;
     }
 
-    .pin:hover { transform: scale(1.4); }
+    .popup-back:hover { color: #444; }
+
+    .popup-links-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .popup-links-list a {
+      font-size: 12px;
+      color: #E84855;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .popup-links-list a:hover { text-decoration: underline; }
+
+    .pin {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      transition: transform 0.15s;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+    }
+
+    .pin:hover { transform: scale(1.3); }
   </style>
 </head>
 <body>
@@ -149,14 +188,10 @@
     trips.forEach(trip => {
       const el = document.createElement('div');
       el.className = 'pin';
+      el.innerHTML = getPinSVG(trip.type);
 
       const popup = new mapboxgl.Popup({ offset: 18, closeButton: false })
-        .setHTML(`
-          <div class="popup-title">${trip.name}</div>
-          <a class="popup-link" href="${trip.postUrl}" target="_blank" rel="noopener noreferrer">
-            Click Here for Inspo!
-          </a>
-        `);
+        .setHTML(buildPopupHTML(trip));
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat(trip.coords)
@@ -175,6 +210,67 @@
     }
   });
 
+  function getPinSVG(type) {
+    if (type === 'walking') {
+      return `<span style="font-size:24px;line-height:32px;display:block;text-align:center;">🚶‍♀️</span>`;
+    }
+    // default: sakura
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+      <g transform="translate(16,16)">
+        <ellipse cx="0" cy="-6" rx="4" ry="6.5" fill="#FFB7C5" transform="rotate(0)"/>
+        <ellipse cx="0" cy="-6" rx="4" ry="6.5" fill="#FFB7C5" transform="rotate(72)"/>
+        <ellipse cx="0" cy="-6" rx="4" ry="6.5" fill="#FFB7C5" transform="rotate(144)"/>
+        <ellipse cx="0" cy="-6" rx="4" ry="6.5" fill="#FFB7C5" transform="rotate(216)"/>
+        <ellipse cx="0" cy="-6" rx="4" ry="6.5" fill="#FFB7C5" transform="rotate(288)"/>
+        <circle cx="0" cy="0" r="3.5" fill="#FF85A1"/>
+      </g>
+    </svg>`;
+  }
+
+  function buildPopupHTML(trip) {
+    if (!trip.links || trip.links.length === 0) {
+      return `<div class="popup-slides">
+        <div class="popup-slide">
+          <div class="popup-title">${trip.name}</div>
+        </div>
+      </div>`;
+    }
+    if (trip.links.length === 1) {
+      return `<div class="popup-slides">
+        <div class="popup-slide">
+          <div class="popup-title">${trip.name}</div>
+          <a class="popup-link" href="${trip.links[0].url}" target="_blank" rel="noopener noreferrer">Click Here for Inspo!</a>
+        </div>
+      </div>`;
+    }
+    const items = trip.links.map(l =>
+      `<a href="${l.url}" target="_blank" rel="noopener noreferrer">${l.label}</a>`
+    ).join('');
+    return `<div class="popup-slides">
+      <div class="popup-slide">
+        <div class="popup-title">${trip.name}</div>
+        <button class="popup-link" onclick="slidePopupForward(this)">Click Here for Inspo! →</button>
+      </div>
+      <div class="popup-slide">
+        <button class="popup-back" onclick="slidePopupBack(this)">← Back</button>
+        <div class="popup-links-list">${items}</div>
+      </div>
+    </div>`;
+  }
+
+  function slidePopupForward(btn) {
+    btn.closest('.popup-slides').classList.add('slid');
+  }
+
+  function slidePopupBack(btn) {
+    btn.closest('.popup-slides').classList.remove('slid');
+  }
+
+  const regionViews = {
+    seattle: { center: [-122.33, 47.6], zoom: 10 },
+    skagit:  { center: [-122.334, 48.42], zoom: 11 },
+  };
+
   function filterPins(region, event) {
     // Update chip styles
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
@@ -184,6 +280,11 @@
     markers.forEach(({ el, region: r }) => {
       el.style.display = (region === 'all' || region === r) ? 'block' : 'none';
     });
+
+    // Fly to region if a view is defined
+    if (regionViews[region]) {
+      map.flyTo({ ...regionViews[region], duration: 1200 });
+    }
   }
 </script>
 

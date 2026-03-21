@@ -1,14 +1,67 @@
 [
   {
     "name": "UW Quad",
-    "coords": [-122.3072, 47.6573],
-    "postUrl": "https://www.instagram.com/p/DVkK9KUFHTE/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==",
-    "region": "seattle"
+    "address": "Pierce Ln, Seattle, WA 98195",
+    "links": [
+      { "label": "Cherry Blossoms", "url": "https://www.instagram.com/p/DVkK9KUFHTE/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" },
+      { "label": "Spring Walk", "url": "https://www.instagram.com/reel/DIm2iEYToyu/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" }
+
+    ],
+    "region": "seattle",
+    "type": "sakura"
   },
   {
     "name": "Volunteer Park",
-    "coords": [-122.314636, 47.630127],
-    "postUrl": "https://www.instagram.com/reel/DJKYI2OydL1/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==",
-    "region": "seattle"
+    "address": "Volunteer Park, Seattle, WA",
+    "links": [
+      { "label": "Spring Walk", "url": "https://www.instagram.com/reel/DJKYI2OydL1/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" }
+    ],
+    "region": "seattle",
+    "type": "walking"
+  },
+  {
+    "name": "RoozenGaarde Tulip Garden",
+    "address": "RoozenGaarde, 15867 Beaver Marsh Rd, Mount Vernon, WA",
+    "links": [
+      { "label": "Tulip Fields", "url": "https://www.instagram.com/p/DI7Xg8UztN3/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" }
+    ],
+    "region": "skagit",
+    "type": "sakura"
+  },
+  {
+    "name": "Ballard",
+    "address": "5301 Leary Ave NW, Seattle, WA 98107",
+    "links": [
+      { "label": "Spend a day in Ballard!", "url": "https://www.instagram.com/reel/DV7SyZTCbXa/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" }
+    ],
+    "region": "seattle",
+    "type": "walking"
+  },
+  {
+    "name": "Kerry Park",
+    "address": "1299-1201 2nd Ave W, Seattle, WA 98119",
+    "region": "seattle",
+    "type": "sakura"
+  },
+  {
+    "name": "Capitol Hill",
+    "address": "21st Ave E & E Aloha St",
+    "region": "seattle",
+    "links": [
+      { "label": "Cherry Blossoms", "url": "https://www.instagram.com/p/DIM4zDETdUp/?img_index=3&igsh=MTN4emc2bXdkdG5weA%3D%3D" }
+    ],
+    "type": "sakura"
+  },
+  {
+    "name": "Kobe Terrace",
+    "address": "650 South Main St, Seattle, WA 98104",
+    "region": "seattle",
+    "type": "sakura"
+  },
+  {
+    "name": "Chery Blossom Lined Street in Ballard",
+    "address": "Earl ave NW and NW 70th St, Seattle, WA 98107",
+    "region": "seattle",
+    "type": "sakura"
   }
 ]
