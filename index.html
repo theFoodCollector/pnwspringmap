@@ -96,8 +96,8 @@
 
 <div class="filters">
   <div class="chip active" onclick="filterPins('all', event)">All</div>
-  <div class="chip" onclick="filterPins('washington', event)">Washington</div>
-  <div class="chip" onclick="filterPins('oregon', event)">Oregon</div>
+  <div class="chip" onclick="filterPins('seattle', event)">Seattle</div>
+  <div class="chip" onclick="filterPins('skagit', event)">Skagit</div>
 </div>
 <div id="map"></div>
 
@@ -110,8 +110,8 @@
     map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/outdoors-v12',
-      center: [-120.5, 45.5],
-      zoom: 6,
+      center: [-122.33, 47.6],
+      zoom: 10,
       attributionControl: false
     });
 
@@ -154,7 +154,7 @@
         .setHTML(`
           <div class="popup-title">${trip.name}</div>
           <a class="popup-link" href="${trip.postUrl}" target="_blank" rel="noopener noreferrer">
-            take me to see the photos
+            Click Here for Inspo!
           </a>
         `);
 
