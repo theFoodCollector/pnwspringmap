@@ -2,6 +2,7 @@
   {
     "name": "UW Quad",
     "coords": [-122.3072, 47.6573],
-    "postUrl": "https://yoursite.com/tokyo-post"
+    "postUrl": "https://yoursite.com/tokyo-post",
+    "region": "washington"
   }
 ]
