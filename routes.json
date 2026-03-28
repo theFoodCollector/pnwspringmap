@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Ballard Spring Walk",
+    "region": "seattle",
+    "color": "#FF85A1",
+    "profile": "walking",
+    "points": [
+      { "address": "1407 NW 70th St, Seattle, WA 98117", "label": "Editor Consignment", "type": "walking" },
+      { "address": "1413 NW 70th St, Seattle, WA 98117", "label": "Rosellini's Bakery", "type": "walking" },
+      { "address": "1702 NW 62nd St, Seattle, WA 98107", "label": "Ballard Corner Park", "type": "sakura" },
+      { "address": "7001 24th Ave NW, Seattle, WA 98117", "label": "Mabel Coffee", "type": "walking" },
+      { "address": "6709 Earl Ave NW, Seattle, WA 98117", "label": "Cherry Blossom Street", "type": "sakura" },
+      { "address": "6405 32nd Ave NW, Seattle, WA 98107", "label": "Salmonberry Goods", "type": "walking" },
+      { "address": "1407 NW 70th St, Seattle, WA 98117", "label": "Editor Consignment", "type": "walking" }
+    ]
+  }
+]

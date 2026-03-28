@@ -11,15 +11,6 @@
     "type": "sakura"
   },
   {
-    "name": "Volunteer Park",
-    "address": "Volunteer Park, Seattle, WA",
-    "links": [
-      { "label": "Spring Walk", "url": "https://www.instagram.com/reel/DJKYI2OydL1/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" }
-    ],
-    "region": "seattle",
-    "type": "walking"
-  },
-  {
     "name": "RoozenGaarde Tulip Garden",
     "address": "RoozenGaarde, 15867 Beaver Marsh Rd, Mount Vernon, WA",
     "links": [
@@ -27,15 +18,6 @@
     ],
     "region": "skagit",
     "type": "sakura"
-  },
-  {
-    "name": "Ballard",
-    "address": "5301 Leary Ave NW, Seattle, WA 98107",
-    "links": [
-      { "label": "Spend a day in Ballard!", "url": "https://www.instagram.com/reel/DV7SyZTCbXa/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" }
-    ],
-    "region": "seattle",
-    "type": "walking"
   },
   {
     "name": "Kerry Park",
@@ -55,12 +37,6 @@
   {
     "name": "Kobe Terrace",
     "address": "650 South Main St, Seattle, WA 98104",
-    "region": "seattle",
-    "type": "sakura"
-  },
-  {
-    "name": "Chery Blossom Lined Street in Ballard",
-    "address": "Earl ave NW and NW 70th St, Seattle, WA 98107",
     "region": "seattle",
     "type": "sakura"
   }

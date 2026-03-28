@@ -128,6 +128,101 @@
     }
 
     .pin:hover { transform: scale(1.3); }
+
+    .legend {
+      position: absolute;
+      top: 60px;
+      left: 16px;
+      z-index: 10;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      width: 200px;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .legend-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      cursor: pointer;
+      user-select: none;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .legend-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+    }
+
+    .legend-toggle {
+      font-size: 10px;
+      color: #999;
+      transition: transform 0.2s;
+    }
+
+    .legend.collapsed .legend-toggle {
+      transform: rotate(-90deg);
+    }
+
+    .legend-body {
+      max-height: 60vh;
+      overflow-y: auto;
+      transition: max-height 0.2s ease;
+    }
+
+    .legend.collapsed .legend-body {
+      max-height: 0;
+    }
+
+    .legend-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #aaa;
+      padding: 10px 14px 4px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      font-size: 12px;
+      color: #333;
+      cursor: pointer;
+      border-radius: 0;
+      transition: background 0.1s;
+    }
+
+    .legend-item:hover { background: #f7f7f7; }
+
+    .legend-route-swatch {
+      width: 18px;
+      height: 3px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .legend-pin-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .legend-empty {
+      padding: 8px 14px 10px;
+      font-size: 12px;
+      color: #bbb;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -138,6 +233,15 @@
   <div class="chip" onclick="filterPins('seattle', event)">Seattle</div>
   <div class="chip" onclick="filterPins('skagit', event)">Skagit</div>
 </div>
+
+<div class="legend" id="legend">
+  <div class="legend-header" onclick="toggleLegend()">
+    <span class="legend-title">Legend</span>
+    <span class="legend-toggle">▼</span>
+  </div>
+  <div class="legend-body" id="legend-body"></div>
+</div>
+
 <div id="map"></div>
 
 <script>
@@ -162,27 +266,36 @@
     console.error('Error initializing map:', error);
   }
 
-  // Load trips from external JSON file
+  // Load trips and routes from external JSON files
   let trips = [];
+  let routes = [];
   let mapLoaded = false;
-  
-  fetch('trips.json')
-    .then(response => response.json())
-    .then(data => {
-      trips = data;
-      if (mapLoaded) {
-        addMarkersToMap();
-      }
-    })
-    .catch(error => {
-      console.error('Error loading trips:', error);
-      const el = document.createElement('div');
-      el.style.cssText = 'position:absolute;top:16px;right:16px;z-index:10;background:white;padding:10px 14px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.15);font-size:13px;color:#c00;';
-      el.textContent = 'Could not load trip data. Please refresh.';
-      document.body.appendChild(el);
-    });
+
+  function tryInit() {
+    if (mapLoaded && trips.length > 0) {
+      addMarkersToMap();
+      addRoutesToMap();
+      updateLegend('all');
+    }
+  }
+
+  Promise.all([
+    fetch('trips.json').then(r => r.json()),
+    fetch('routes.json').then(r => r.json()).catch(() => [])
+  ]).then(([tripsData, routesData]) => {
+    trips = tripsData;
+    routes = routesData;
+    tryInit();
+  }).catch(error => {
+    console.error('Error loading data:', error);
+    const el = document.createElement('div');
+    el.style.cssText = 'position:absolute;top:16px;right:16px;z-index:10;background:white;padding:10px 14px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.15);font-size:13px;color:#c00;';
+    el.textContent = 'Could not load trip data. Please refresh.';
+    document.body.appendChild(el);
+  });
 
   const markers = [];
+  const routeLayers = [];
 
   function addMarkersToMap() {
     trips.forEach(trip => {
@@ -202,12 +315,86 @@
     });
   }
 
-  // Initialize map and load markers when map is ready
+  function addRoutesToMap() {
+    routes.forEach((route, i) => {
+      const lineCoords = route.geometry || route.points.map(p => p.coords).filter(Boolean);
+      if (lineCoords.length < 2) return;
+
+      const color = route.color || '#E84855';
+      const lineId = `route-${i}`;
+      const arrowId = `route-arrows-${i}`;
+      const pointsId = `route-points-${i}`;
+
+      // Line layer
+      map.addSource(lineId, {
+        type: 'geojson',
+        data: { type: 'Feature', geometry: { type: 'LineString', coordinates: lineCoords } }
+      });
+      map.addLayer({
+        id: lineId,
+        type: 'line',
+        source: lineId,
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: { 'line-color': color, 'line-width': 6, 'line-opacity': 0.8 }
+      });
+
+      // Arrow symbol layer for direction
+      map.addLayer({
+        id: arrowId,
+        type: 'symbol',
+        source: lineId,
+        layout: {
+          'symbol-placement': 'line',
+          'symbol-spacing': 80,
+          'text-field': '▶',
+          'text-size': 20,
+          'text-keep-upright': false,
+          'text-rotation-alignment': 'map',
+          'text-pitch-alignment': 'viewport'
+        },
+        paint: {
+          'text-color': color,
+          'text-halo-color': '#fff',
+          'text-halo-width': 1.5
+        }
+      });
+
+      // Point markers for each waypoint
+      const pointMarkers = route.points.filter(p => p.coords).map(p => {
+        const el = document.createElement('div');
+        if (p.type === 'sakura') {
+          el.className = 'pin';
+          el.style.width = '48px';
+          el.style.height = '48px';
+          el.innerHTML = getPinSVG(p.type);
+        } else {
+          const dotColor = p.type === 'walking' ? '#89CFF0' : color;
+          el.className = 'route-dot';
+          el.style.cssText = `width:15px;height:15px;border-radius:50%;background:${dotColor};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.25);cursor:${p.label ? 'pointer' : 'default'};`;
+        }
+
+        const markerObj = new mapboxgl.Marker({ element: el, anchor: 'center' })
+          .setLngLat(p.coords);
+
+        if (p.label) {
+          const popup = new mapboxgl.Popup({ offset: 10, closeButton: false })
+            .setHTML(`<div class="popup-slide"><div class="popup-title">${p.label}</div></div>`);
+          markerObj.setPopup(popup);
+          el.addEventListener('click', () => markerObj.togglePopup());
+        }
+
+        markerObj.addTo(map);
+        return { markerObj, el };
+      });
+
+      routeLayers.push({ layerId: lineId, arrowId, pointMarkers, region: route.region });
+    });
+  }
+
+  // Initialize map and load markers/routes when map is ready
   map.on('load', () => {
     mapLoaded = true;
-    if (trips.length > 0) {
-      addMarkersToMap();
-    }
+    tryInit();
   });
 
   function getPinSVG(type) {
@@ -266,6 +453,73 @@
     btn.closest('.popup-slides').classList.remove('slid');
   }
 
+  function toggleLegend() {
+    document.getElementById('legend').classList.toggle('collapsed');
+  }
+
+  function updateLegend(region) {
+    const body = document.getElementById('legend-body');
+    const visibleRoutes = routes.filter(r => region === 'all' || r.region === region);
+    const visibleTrips = trips.filter(t => region === 'all' || t.region === region);
+
+    let html = '';
+
+    // Routes section
+    if (visibleRoutes.length > 0) {
+      html += `<div class="legend-section-title">Routes</div>`;
+      visibleRoutes.forEach(route => {
+        const color = route.color || '#E84855';
+        html += `<div class="legend-item" onclick="flyToRoute(${routes.indexOf(route)})">
+          <span class="legend-route-swatch" style="background:${color}"></span>
+          <span>${route.name}</span>
+        </div>`;
+      });
+    }
+
+    // Places section
+    if (visibleTrips.length > 0) {
+      html += `<div class="legend-section-title">Places</div>`;
+      visibleTrips.forEach((trip, i) => {
+        const icon = trip.type === 'walking'
+          ? `<span style="font-size:13px;line-height:1;">🚶‍♀️</span>`
+          : `<svg width="14" height="14" viewBox="0 0 32 32"><g transform="translate(16,16)"><ellipse cx="0" cy="-6" rx="4" ry="6.5" fill="#FFB7C5" transform="rotate(0)"/><ellipse cx="0" cy="-6" rx="4" ry="6.5" fill="#FFB7C5" transform="rotate(72)"/><ellipse cx="0" cy="-6" rx="4" ry="6.5" fill="#FFB7C5" transform="rotate(144)"/><ellipse cx="0" cy="-6" rx="4" ry="6.5" fill="#FFB7C5" transform="rotate(216)"/><ellipse cx="0" cy="-6" rx="4" ry="6.5" fill="#FFB7C5" transform="rotate(288)"/><circle cx="0" cy="0" r="3.5" fill="#FF85A1"/></g></svg>`;
+        const tripIndex = trips.indexOf(trip);
+        html += `<div class="legend-item" onclick="flyToTrip(${tripIndex})">
+          <span class="legend-pin-icon">${icon}</span>
+          <span>${trip.name}</span>
+        </div>`;
+      });
+    }
+
+    if (!html) {
+      html = `<div class="legend-empty">No items for this region.</div>`;
+    }
+
+    body.innerHTML = html;
+  }
+
+  function flyToRoute(routeIndex) {
+    const route = routes[routeIndex];
+    if (!route) return;
+    const coords = route.points.map(p => p.coords).filter(Boolean);
+    if (coords.length === 0) return;
+    const lngs = coords.map(c => c[0]);
+    const lats = coords.map(c => c[1]);
+    map.fitBounds(
+      [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
+      { padding: 80, duration: 1000, maxZoom: 14 }
+    );
+  }
+
+  function flyToTrip(tripIndex) {
+    const trip = trips[tripIndex];
+    if (!trip || !trip.coords) return;
+    map.flyTo({ center: trip.coords, zoom: 14, duration: 900 });
+    // Open the marker popup
+    const m = markers[tripIndex];
+    if (m) m.marker.togglePopup();
+  }
+
   const regionViews = {
     seattle: { center: [-122.33, 47.6], zoom: 10 },
     skagit:  { center: [-122.334, 48.42], zoom: 11 },
@@ -280,6 +534,18 @@
     markers.forEach(({ el, region: r }) => {
       el.style.display = (region === 'all' || region === r) ? 'block' : 'none';
     });
+
+    // Show/hide route layers and point markers
+    routeLayers.forEach(({ layerId, arrowId, pointMarkers, region: r }) => {
+      const visible = region === 'all' || region === r;
+      const vis = visible ? 'visible' : 'none';
+      map.setLayoutProperty(layerId, 'visibility', vis);
+      map.setLayoutProperty(arrowId, 'visibility', vis);
+      pointMarkers.forEach(({ el }) => { el.style.display = visible ? 'block' : 'none'; });
+    });
+
+    // Update legend
+    updateLegend(region);
 
     // Fly to region if a view is defined
     if (regionViews[region]) {
